@@ -1,9 +1,7 @@
-// package test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 
 import java.util.Date;
 import java.util.List;
@@ -18,7 +16,6 @@ import model.Transaction;
 import model.Filter.AmountFilter;
 import model.Filter.CategoryFilter;
 import view.ExpenseTrackerView;
-
 
 public class TestExample {
   
@@ -36,178 +33,155 @@ public class TestExample {
     controller = new ExpenseTrackerController(model, view);
   }
 
-    public double getTotalCost() {
-        double totalCost = 0.0;
-        List<Transaction> allTransactions = model.getTransactions(); // Using the model's getTransactions method
-        for (Transaction transaction : allTransactions) {
-            totalCost += transaction.getAmount();
-        }
-        return totalCost;
+  public double getTotalCost() {
+    double totalCost = 0.0;
+    List<Transaction> allTransactions = model.getTransactions();
+    for (Transaction transaction : allTransactions) {
+      totalCost += transaction.getAmount();
+    }
+    return totalCost;
+  }
+
+  public void checkTransaction(double amount, String category, Transaction transaction) {
+    assertEquals(amount, transaction.getAmount(), 0.01);
+    assertEquals(category, transaction.getCategory());
+    String transactionDateString = transaction.getTimestamp();
+    Date transactionDate = null;
+    try {
+      transactionDate = Transaction.dateFormatter.parse(transactionDateString);
+    } catch (ParseException pe) {
+      pe.printStackTrace();
+    }
+    Date nowDate = new Date();
+    assertNotNull(transactionDate);
+    assertNotNull(nowDate);
+    // Allow ≤ 60 seconds difference
+    assertTrue(nowDate.getTime() - transactionDate.getTime() < 60000);
+  }
+
+  /**
+   * Test Case 1: Add Valid Transaction
+   * Purpose: Verify that a valid transaction is added successfully.
+   * Steps: Add a transaction (amount=50.00, category="food").
+   * Expected Output: Transaction added, total cost updated correctly.
+   */
+  @Test
+  public void testAddTransaction() {
+    assertEquals(0, model.getTransactions().size());
+    double amount = 50.0;
+    String category = CATEGORY_FOOD;
+    assertTrue(controller.addTransaction(amount, category));
+
+    assertEquals(1, model.getTransactions().size());
+    Transaction firstTransaction = model.getTransactions().get(0);
+    checkTransaction(amount, category, firstTransaction);
+    assertEquals(amount, getTotalCost(), 0.01);
+  }
+
+  /**
+   * Original existing test: Remove Transaction
+   * Verifies transaction removal and total reset.
+   */
+  @Test
+  public void testRemoveTransaction() {
+    assertEquals(0, model.getTransactions().size());
+
+    double amount = 50.0;
+    String category = CATEGORY_FOOD;
+    Transaction addedTransaction = new Transaction(amount, category);
+    model.addTransaction(addedTransaction);
+    assertEquals(1, model.getTransactions().size());
+
+    Transaction firstTransaction = model.getTransactions().get(0);
+    checkTransaction(amount, category, firstTransaction);
+    assertEquals(amount, getTotalCost(), 0.01);
+
+    model.removeTransaction(addedTransaction);
+    assertEquals(0, model.getTransactions().size());
+    assertEquals(0.00, getTotalCost(), 0.01);
+  }
+
+  /**
+   * Test Case 2: Input Validation for Amount
+   * Purpose: Verify invalid amount input is rejected.
+   * Steps: Attempt to add a transaction with amount=0.00 and valid category.
+   * Expected Output: Transaction not added, total cost unchanged.
+   */
+  @Test
+  public void testInvalidAmountInput() {
+    assertEquals(0, model.getTransactions().size());
+    assertEquals(0.00, getTotalCost(), 0.01);
+
+    boolean didAddTransaction = controller.addTransaction(0.00, CATEGORY_FOOD);
+    assertFalse(didAddTransaction);
+    assertEquals(0, model.getTransactions().size());
+    assertEquals(0.00, getTotalCost(), 0.01);
+  }
+
+  /**
+   * Test Case 3: Input Validation for Category
+   * Purpose: Verify invalid category input is rejected.
+   * Steps: Attempt to add a transaction with valid amount but empty category.
+   * Expected Output: Transaction not added, total cost unchanged.
+   */
+  @Test
+  public void testInvalidCategoryInput() {
+    assertEquals(0, model.getTransactions().size());
+    assertEquals(0.00, getTotalCost(), 0.01);
+
+    boolean didAddTransaction = controller.addTransaction(50.00, "");
+    assertFalse(didAddTransaction);
+    assertEquals(0, model.getTransactions().size());
+    assertEquals(0.00, getTotalCost(), 0.01);
+  }
+
+  /**
+   * Test Case 4: Filter by Amount
+   * Purpose: Verify filtering transactions by specific amount.
+   * Steps: Add multiple transactions, apply filter for amount=50.0.
+   * Expected Output: Only transactions with amount 50.0 are displayed.
+   */
+  @Test
+  public void testFilterByAmount() {
+    double[] amountsList = { 50.0, 30.0, 40.0 };
+    String[] categoriesList = { CATEGORY_FOOD, CATEGORY_ENTERTAINMENT, CATEGORY_FOOD };
+    for (int i = 0; i < amountsList.length; i++) {
+      controller.addTransaction(amountsList[i], categoriesList[i]);
     }
 
+    assertEquals(3, model.getTransactions().size());
 
-    public void checkTransaction(double amount, String category, Transaction transaction) {
-	assertEquals(amount, transaction.getAmount(), 0.01);
-        assertEquals(category, transaction.getCategory());
-        String transactionDateString = transaction.getTimestamp();
-        Date transactionDate = null;
-        try {
-            transactionDate = Transaction.dateFormatter.parse(transactionDateString);
-        }
-        catch (ParseException pe) {
-            pe.printStackTrace();
-            transactionDate = null;
-        }
-        Date nowDate = new Date();
-        assertNotNull(transactionDate);
-        assertNotNull(nowDate);
-        // They may differ by 60 ms
-        assertTrue(nowDate.getTime() - transactionDate.getTime() < 60000);
+    controller.setFilter(new AmountFilter(50.0));
+    controller.applyFilter();
+
+    List<Transaction> displayedTransactions = view.getDisplayedTransactions();
+    assertEquals(1, displayedTransactions.size());
+    assertEquals(50.0, displayedTransactions.get(0).getAmount(), 0.01);
+  }
+
+  /**
+   * Test Case 5: Filter by Category
+   * Purpose: Verify filtering transactions by category.
+   * Steps: Add multiple transactions, apply filter for category="food".
+   * Expected Output: Only transactions with category "food" are displayed.
+   */
+  @Test
+  public void testFilterByCategory() {
+    double[] amountsList = { 50.0, 30.0, 40.0 };
+    String[] categoriesList = { CATEGORY_FOOD, CATEGORY_ENTERTAINMENT, CATEGORY_FOOD };
+    for (int i = 0; i < amountsList.length; i++) {
+      controller.addTransaction(amountsList[i], categoriesList[i]);
     }
 
+    assertEquals(3, model.getTransactions().size());
 
-    @Test
-    public void testAddTransaction() {
-        // Pre-condition: List of transactions is empty
-        assertEquals(0, model.getTransactions().size());
-    
-        // Perform the action: Add a transaction
-	double amount = 50.0;
-	String category = CATEGORY_FOOD;
-        assertTrue(controller.addTransaction(amount, category));
-    
-        // Post-condition: List of transactions contains only
-	//                 the added transaction	
-        assertEquals(1, model.getTransactions().size());
-    
-        // Check the contents of the list
-	Transaction firstTransaction = model.getTransactions().get(0);
-	checkTransaction(amount, category, firstTransaction);
-	
-	// Check the total amount
-        assertEquals(amount, getTotalCost(), 0.01);
+    controller.setFilter(new CategoryFilter(CATEGORY_FOOD));
+    controller.applyFilter();
+
+    List<Transaction> displayedTransactions = view.getDisplayedTransactions();
+    assertEquals(2, displayedTransactions.size());
+    for (Transaction currDisplayedTransaction : displayedTransactions) {
+      assertEquals(CATEGORY_FOOD, currDisplayedTransaction.getCategory());
     }
-
-
-    @Test
-    public void testRemoveTransaction() {
-        // Pre-condition: List of transactions is empty
-        assertEquals(0, model.getTransactions().size());
-    
-        // Perform the action: Add and remove a transaction
-	double amount = 50.0;
-	String category = CATEGORY_FOOD;
-        Transaction addedTransaction = new Transaction(amount, category);
-        model.addTransaction(addedTransaction);
-    
-        // Pre-condition: List of transactions contains only
-	//                the added transaction
-        assertEquals(1, model.getTransactions().size());
-	Transaction firstTransaction = model.getTransactions().get(0);
-	checkTransaction(amount, category, firstTransaction);
-
-	assertEquals(amount, getTotalCost(), 0.01);
-	
-	// Perform the action: Remove the transaction
-        model.removeTransaction(addedTransaction);
-    
-        // Post-condition: List of transactions is empty
-        List<Transaction> transactions = model.getTransactions();
-        assertEquals(0, transactions.size());
-    
-        // Check the total cost after removing the transaction
-        double totalCost = getTotalCost();
-        assertEquals(0.00, totalCost, 0.01);
-    }
-    
-
-        
-    @Test
-    public void testInvalidInputHandling() {
-	// This is new test case 2: For the Controller
-	//
-	// Check pre-conditions
-	assertEquals(0, model.getTransactions().size());
-	assertEquals(0.00, getTotalCost(), 0.01);
-	// Call the unit under test
-        boolean didAddTransaction = controller.addTransaction(0.00, "InvalidCategory");
-	// Check post-conditions (i.e. nothing changed)
-	assertFalse(didAddTransaction);
-        assertEquals(0, model.getTransactions().size());
-        assertEquals(0.00, getTotalCost(), 0.01);
-
-	// See above for the pre-conditions
-	//
-	// Call the unit under test
-	boolean didAddTransaction2 = controller.addTransaction(50.00, "");
-	// Check the post-conditions
-	assertFalse(didAddTransaction2);
-        assertEquals(0, model.getTransactions().size());
-        assertEquals(0.00, getTotalCost(), 0.01);
-    }
-
-    //filter by amount
-    @Test
-    public void testFilterByAmount() {
-	// This is new test case 3: For the Model
-	//
-	// Setup
-	double[] amountsList = { 50.0, 30.0, 40.0 };
-	double amountToFilterBy = amountsList[0];
-	String[] categoriesList = { CATEGORY_FOOD, CATEGORY_ENTERTAINMENT, CATEGORY_FOOD };
-	for (int i = 0; i < amountsList.length; i++) {
-	    controller.addTransaction(amountsList[i], categoriesList[i]);
-	}
-
-	// Check pre-conditions
-	List<Transaction> transactionsList = model.getTransactions();
-	assertEquals(3, transactionsList.size());
-	for (int j = 0; j < transactionsList.size(); j++) {
-	    Transaction currentTransaction = transactionsList.get(j);
-	    checkTransaction(amountsList[j], categoriesList[j], currentTransaction);
-	}
-
-	// Call unit under test
-        controller.setFilter(new AmountFilter(amountToFilterBy));
-        controller.applyFilter();
-
-	// Check the post-conditions
-        List<Transaction> displayedTransactions = view.getDisplayedTransactions();
-        assertEquals(1, displayedTransactions.size());
-        assertEquals(amountToFilterBy, displayedTransactions.get(0).getAmount(), 0.01);
-    } 
-
-
-    //filter by category
-    @Test
-    public void testFilterByCategory() {
-	// This is new test case 4: For the Model
-	//
-        // Setup
-	double[] amountsList = { 50.0, 30.0, 40.0 };
-        String[] categoriesList = { CATEGORY_FOOD, CATEGORY_ENTERTAINMENT, CATEGORY_FOOD };
-	String categoryToFilterBy = categoriesList[0];
-        for (int i = 0; i < amountsList.length; i++) {
-            controller.addTransaction(amountsList[i], categoriesList[i]);
-        }
-
-        // Check pre-conditions 
-        List<Transaction> transactionsList = model.getTransactions();
-        assertEquals(3, transactionsList.size());
-        for (int j = 0; j < transactionsList.size(); j++) {
-            Transaction currentTransaction = transactionsList.get(j);
-            checkTransaction(amountsList[j], categoriesList[j], currentTransaction);
-        }
-	
-	// Call the unit under test
-        controller.setFilter(new CategoryFilter(categoryToFilterBy));
-        controller.applyFilter();
-
-	// Check the post-conditions
-        List<Transaction> displayedTransactions = view.getDisplayedTransactions();
-        assertEquals(2, displayedTransactions.size());
-	for (Transaction currDisplayedTransaction : displayedTransactions) {
-	    assertEquals(categoryToFilterBy, currDisplayedTransaction.getCategory());
-	}
-    }
+  }
 }
