@@ -52,6 +52,30 @@ public class ExpenseTrackerController {
     return true;
   }
 
+  /**
+   * Adds a transaction but returns a user-friendly error message on failure.
+   * Returns null when the add was successful.
+   */
+  public String addTransactionWithMessage(double amount, String category) {
+    if (!InputValidation.isValidAmount(amount)) {
+      return "Amount must be > 0 and <= 1000";
+    }
+    if (!InputValidation.isValidCategory(category)) {
+      return "Category must be one of: food, travel, bills, entertainment, other";
+    }
+
+    try {
+      Transaction t = new Transaction(amount, category);
+      model.addTransaction(t);
+      view.getTableModel().addRow(new Object[]{t.getAmount(), t.getCategory(), t.getTimestamp()});
+      refresh();
+      return null;
+    } catch (IllegalArgumentException ex) {
+      // Return the constructor's message if validation inside Transaction fails
+      return ex.getMessage();
+    }
+  }
+
   public void applyFilter() {
     List<Transaction> filteredTransactions;
     // If no filter is specified, show all transactions.

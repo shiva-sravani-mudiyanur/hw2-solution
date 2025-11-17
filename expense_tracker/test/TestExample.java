@@ -3,9 +3,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
-import java.util.Date;
 import java.util.List;
-import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,17 +47,13 @@ public class TestExample {
     assertEquals(amount, transaction.getAmount(), 0.01);
     assertEquals(category, transaction.getCategory());
     String transactionDateString = transaction.getTimestamp();
-    Date transactionDate = null;
-    try {
-      transactionDate = Transaction.dateFormatter.parse(transactionDateString);
-    } catch (ParseException pe) {
-      pe.printStackTrace();
-    }
-    Date nowDate = new Date();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+    LocalDateTime transactionDate = LocalDateTime.parse(transactionDateString, formatter);
+    LocalDateTime nowDate = LocalDateTime.now();
     assertNotNull(transactionDate);
     assertNotNull(nowDate);
     // Allow ≤ 60 seconds difference
-    assertTrue(nowDate.getTime() - transactionDate.getTime() < 60000);
+    assertTrue(Duration.between(transactionDate, nowDate).getSeconds() < 60);
   }
 
   /**

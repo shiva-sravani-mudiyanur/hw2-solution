@@ -55,7 +55,7 @@
         <echo message="Running unit tests ..."/>
         <junit  printsummary="true" 
         	showoutput="true" 
-                haltonfailure="false">
+            haltonfailure="false">
             <formatter type="plain" usefile="false"/>
             <classpath path="bin"/>
             <classpath location="${junit.jar}"/>

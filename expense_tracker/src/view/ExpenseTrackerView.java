@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Transaction;
@@ -84,10 +85,23 @@ public class ExpenseTrackerView extends JFrame {
   }
 
   public double getAmountField() {
-    if (amountField.getText().isEmpty()) {
+    // Prefer the formatted value if available
+    Object value = amountField.getValue();
+    if (value instanceof Number) {
+      return ((Number) value).doubleValue();
+    }
+
+    String text = amountField.getText();
+    if (text == null || text.trim().isEmpty()) {
       return 0;
-    } else {
-      return Double.parseDouble(amountField.getText());
+    }
+
+    try {
+      Number n = NumberFormat.getNumberInstance().parse(text.trim());
+      return n.doubleValue();
+    } catch (ParseException | NullPointerException e) {
+      // Return NaN to indicate an unparsable value so caller can show an error
+      return Double.NaN;
     }
   }
 

@@ -8,6 +8,7 @@ import controller.InputValidation;
 
 public class AmountFilter implements TransactionFilter{
     private double amountFilter;
+    private static final double EPSILON = 1e-6;
 
     public AmountFilter(double amountFilter){
         // Since the AmountFilter constructor is public, 
@@ -27,7 +28,7 @@ public class AmountFilter implements TransactionFilter{
         List<Transaction> filteredTransactions = new ArrayList<>();
         for(Transaction transaction : transactions){
             // Your solution could use a different comparison here.
-            if(transaction.getAmount() == amountFilter){
+            if (Math.abs(transaction.getAmount() - amountFilter) < EPSILON) {
                 filteredTransactions.add(transaction);
             }
         }
