@@ -6,6 +6,11 @@ import java.util.List;
 import model.Transaction;
 import controller.InputValidation;
 
+/**
+ * The AmountFilter class only shows the Transactions with amounts approximately equal to the specified amount.
+ *
+ * NOTE) The Strategy design pattern is being applied. This is a concrete strategy class.
+ */
 public class AmountFilter implements TransactionFilter{
     private double amountFilter;
     private static final double EPSILON = 1e-6;
