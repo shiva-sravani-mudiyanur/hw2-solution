@@ -6,6 +6,11 @@ import java.util.List;
 import model.Transaction;
 import controller.InputValidation;
 
+/**
+ * The CategoryFilter class only shows the Transactions with categories equal to the specified category.
+ *
+ * NOTE) This is applying the Strategy design pattern. This is a concrete strategy class.
+ */
 public class CategoryFilter implements TransactionFilter {
     private String categoryFilter;
 
