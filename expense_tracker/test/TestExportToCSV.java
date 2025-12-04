@@ -84,7 +84,7 @@ public class TestExportToCSV {
     	
     	createMockCsvFile();
 
-        File csvFile = new File("test-output.csv");
+        File csvFile = new File("mockCSVFile.csv");
         assertTrue(csvFile.exists());
         List<String> transactions = Files.readAllLines(csvFile.toPath());
         assertTrue(transactions.size() >= 6);
