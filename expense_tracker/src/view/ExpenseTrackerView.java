@@ -25,6 +25,10 @@ public class ExpenseTrackerView extends JFrame {
   private JButton amountFilterBtn;
 
   private JButton clearFilterBtn;
+
+  //Create new export button to generate a csv file from the list of transactions
+  private JButton exportToCSVBtn;
+
     
   private List<Transaction> displayedTransactions = new ArrayList<>(); // ✅ Moved here
 
@@ -55,6 +59,10 @@ public class ExpenseTrackerView extends JFrame {
     amountFilterBtn = new JButton("Filter by Amount");
 
     clearFilterBtn = new JButton("Clear Filter");
+
+    //Initializing Export to csv button
+    exportToCSVBtn = new JButton("Export To CSV");
+
     
     JPanel inputPanel = new JPanel();
     inputPanel.add(amountLabel);
@@ -67,6 +75,9 @@ public class ExpenseTrackerView extends JFrame {
     buttonPanel.add(amountFilterBtn);
     buttonPanel.add(categoryFilterBtn);
     buttonPanel.add(clearFilterBtn);
+    //adding export button to the buttonPanel
+    buttonPanel.add(exportToCSVBtn);
+
     
     add(inputPanel, BorderLayout.NORTH);
     add(new JScrollPane(transactionsTable), BorderLayout.CENTER); 
@@ -136,6 +147,21 @@ public class ExpenseTrackerView extends JFrame {
     } catch (NumberFormatException e) {
       return 0.0;
     }
+  }
+  
+  //Creating Listerner for export button
+  public void addExportToCSVListener(ActionListener listener) {
+    exportToCSVBtn.addActionListener(listener);
+  }
+
+  //Creating a Dialog box to get the file name from user
+  public String getExportFilenameFromUser() {
+    return JOptionPane.showInputDialog(this, "Enter FileName (Please follow naming convention: filename.csv):");
+  }
+
+  //To display export status message
+  public void displayExportStatusMessage(String msg) {
+    JOptionPane.showMessageDialog(this, msg);
   }
 
   public void addClearFilterListener(ActionListener listener) {

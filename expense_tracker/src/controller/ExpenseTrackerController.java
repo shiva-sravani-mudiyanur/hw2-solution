@@ -5,6 +5,12 @@ import view.ExpenseTrackerView;
 import java.util.ArrayList;
 import java.util.List;
 
+//
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import javax.swing.JOptionPane;
 
 import model.ExpenseTrackerModel;
@@ -98,6 +104,79 @@ public class ExpenseTrackerController {
       filteredTransactions = filter.filter(transactions);
     }
     view.displayFilteredTransactions(filteredTransactions);
+  }
+
+  /**
+   * To export all transactions to a CSV file.
+   * To display export status message.
+   */
+  public void exportTransactionsListToCsv(String filename) {
+    if (!isValidCsvFilename(filename)) {
+      view.displayExportStatusMessage("Invalid file name. Please provide a valid .csv name.");
+      return;
+    }
+    List<Transaction> transactions = model.getTransactions();
+    String content = generateCsvContent(transactions);
+    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)))) {
+      writer.print(content);
+      view.displayExportStatusMessage("File" + filename + "Exported Successfully");
+    } catch (IOException e) {
+      view.displayExportStatusMessage("CSV File Export Failed" + e.getMessage());
+    }
+  }
+
+  /**
+   * To validate the provided csv file name.
+   */
+  public boolean isValidCsvFilename(String fileName) {
+
+    if (fileName == null) {
+      return false;
+    }
+
+    String trimmedFileName = fileName.trim();
+    if (trimmedFileName.isEmpty()) {
+      return false;
+    }
+    if (!trimmedFileName.matches("[A-Za-z0-9 _\\-\\.]+")) {
+      return false;
+    }
+    if (trimmedFileName.contains("/") || trimmedFileName.contains("\\") || trimmedFileName.contains("..")) {
+      return false;
+    }
+
+    String convertFileNameToLowercaseString = trimmedFileName.toLowerCase();
+    if (!convertFileNameToLowercaseString.endsWith(".csv")) {
+      return false;
+    }
+   
+    return true;
+  }
+
+  /**
+   * To generate content from the provided transactions list to add .
+   */
+  public String generateCsvContent(List<Transaction> transactions) {
+    StringBuilder stringBuilder = new StringBuilder("Date,Amount,Category" + "\n");
+    for (Transaction t : transactions) {
+      String date = t.getTimestamp();
+      String convertAmountToString = String.format("%.2f", t.getAmount());
+      String category = formatStringForCSV(t.getCategory());
+      stringBuilder.append(date).append(',').append(convertAmountToString).append(',').append(category).append("\n");
+    }
+    return stringBuilder.toString();
+  }
+
+  /**
+   * To take a string and formats it safely for CSV files.
+   */
+  public String formatStringForCSV(String str) {
+
+    if (str == null) {
+      return "\"\"";
+    }
+
+    return "\"" + str.replace("\"", "\"\"") + "\"";
   }
     
 }

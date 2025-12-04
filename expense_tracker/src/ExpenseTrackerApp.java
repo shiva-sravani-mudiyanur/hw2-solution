@@ -82,6 +82,15 @@ public class ExpenseTrackerApp {
         controller.setFilter(null);
         controller.applyFilter();
       });
+
+      // Adding an action listener to the "Export CSV" button
+      view.addExportToCSVListener(e -> {
+        String filename = view.getExportFilenameFromUser();
+        if (filename != null) {
+          controller.exportTransactionsListToCsv(filename);
+        }
+      });
+
     });
   }
 }
