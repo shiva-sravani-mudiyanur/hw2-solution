@@ -49,6 +49,16 @@ Please ensure your JDK version is compatible (JDK 8 recommended).
 * **Input Validation:**
   Reuses Homework 1 validation logic for both adding transactions and filtering.
 
+
+
+* **Export to CSV:**
+
+User specifies an output filename.
+
+Filename is validated to be non‑empty string and to end with ".csv".
+
+The first line of the file contains column headers, and each subsequent line contains a transaction.
+
 ## Testing
 
 The test suite includes:
@@ -81,5 +91,39 @@ expense_tracker/
 ├── build.xml         # Ant build file
 ├── README.md         # Updated README
 ├── gitlog.txt        # Git commit log
-├── test_screenshot.png
-└── export.pdf        # Usability design plan
+
+```
+
+### **CSV Export Usage**
+
+Start the application (ant run) and add one or more transactions.
+
+Click the Export CSV button/menu item in the UI.
+
+When prompted, enter a non‑empty filename that ends with .csv (for example, transactions.csv).
+
+If the filename is invalid (empty/incorrect extension), the UI shows an error dialog instead of writing a file.
+
+On success, a CSV file is created with:
+
+A header row (e.g., Amount,Category,Timestamp).
+
+One row per transaction currently in the model.
+
+### **Design Notes **
+
+The system follows the MVC pattern:
+
+Model: manages the transaction list, total cost, and CSV export logic.
+
+View: GUI UI (table, buttons, dialog boxes).
+
+Controller: connects user actions (add, delete, filter, export) to the model and triggers view refreshes.
+
+**Object‑Oriented and UI design principles applied:**
+
+Clear separation of concerns and single‑responsibility components.
+
+Input validation and helpful error messages for export and delete operations.
+
+No “magic strings” for core behavior (e.g., CSV extension, headers kept as shared constants).

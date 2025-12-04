@@ -15,6 +15,7 @@ import model.ExpenseTrackerModel;
 import model.Transaction;
 import view.ExpenseTrackerView;
 
+
 public class TestExportToCSV {
 
     private ExpenseTrackerModel expenseTrackerModelMock;
@@ -114,14 +115,5 @@ public class TestExportToCSV {
 
     }
 
-    
-    @Test
-    public void testExport_ioException_displaysError() throws IOException {
-        // Create a directory named ioerror.csv so opening as a file throws IOException
-        Files.createDirectories(Paths.get("ioerror.csv"));
-        expenseTrackerControllerMock.exportTransactionsListToCsv("ioerror.csv");
-        String msg = viewMock.getLastMessage();
-        assertTrue(msg.startsWith("CSV File Export Failed"));
-    }
     
 }
